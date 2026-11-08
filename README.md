@@ -1,10 +1,10 @@
 # MicWright
 
-Real-time voice enhancement for the **HyperX QuadCast** on Windows. MicWright cleans up your mic as you talk: it removes background noise, evens out your volume, softens harsh "s" sounds and can add effects. Discord, OBS, games and any other app then hear the enhanced voice instead of the raw mic.
+Real-time voice enhancement for your microphone on Windows. MicWright cleans up your mic as you talk: it removes background noise, evens out your volume, softens harsh "s" sounds and can add effects. Discord, OBS, games and any other app then hear the enhanced voice instead of the raw mic.
 
 Everything runs on your PC. No audio ever goes online.
 
-> MicWright is tuned for the QuadCast but works with any microphone. Pick yours on the **Devices** page.
+> MicWright works with any microphone. Pick yours on the **Devices** page.
 
 ## Features
 
@@ -21,7 +21,7 @@ Everything runs on your PC. No audio ever goes online.
 ## Requirements
 
 - Windows 10 (version 2004 or later) or Windows 11, 64-bit
-- A microphone (made for the HyperX QuadCast)
+- A microphone
 - [VB-CABLE](https://vb-audio.com/Cable/) (free) to send the enhanced voice to other apps
 
 Nothing else is needed: .NET and the Windows App SDK are bundled with the app.
@@ -52,7 +52,7 @@ VB-CABLE is made by VB-Audio and isn't part of MicWright. It's donationware for 
 The first time it opens, MicWright walks you through setup:
 
 1. **Pick your microphone.**
-2. **Check your level** by talking normally, then adjust the mic's gain knob if needed.
+2. **Check your level** by talking normally, then adjust your mic's gain if needed.
 3. **Choose where you'll use it:** every app that uses the default mic (recommended), or only the apps you pick.
 
 You can run setup again any time from **Settings > Setup**. Presets for different rooms are on the **Presets** page.
@@ -63,7 +63,7 @@ You can run setup again any time from **Settings > Setup**. Presets for differen
 2. In your other app, set the microphone to `CABLE Output (VB-Audio Virtual Cable)`.
 3. In Discord, also turn **off** its own Noise Suppression, Echo Cancellation and Automatic Gain Control. MicWright already does these, and doing them twice makes your voice sound worse.
 
-**Shortcut:** turn on **Settings > Use as the Windows default mic** instead of step 2. Every app left on "Default" then uses your enhanced voice automatically. Apps that picked the QuadCast by name still get the raw mic, so set those to Default. Turning the switch off, or quitting MicWright, puts your previous default mic back.
+**Shortcut:** turn on **Settings > Use as the Windows default mic** instead of step 2. Every app left on "Default" then uses your enhanced voice automatically. Apps that picked your microphone by name still get the raw mic, so set those to Default. Turning the switch off, or quitting MicWright, puts your previous default mic back.
 
 With this switch on, closing the window keeps MicWright running in the notification area. Right-click its icon > **Quit** to stop it.
 
@@ -96,8 +96,8 @@ The Soundboard mixes your clips in after the voice chain, so others hear them al
 
 ## Tips
 
-- Speak into the **side** of the QuadCast (where the HyperX logo is), not the top.
-- Set the pattern dial on the back to **cardioid** (the heart icon).
+- Speak into the side of the mic that picks up sound. Many USB mics pick up from the **side**, not the top.
+- If your mic has a pickup pattern switch, set it to **cardioid**.
 - **Space** flips between raw and enhanced, and **M** mutes.
 - **Presets > Save current sound…** keeps a sound you like. Your last settings come back on launch.
 - Only add soundboard clips you have the right to share.
@@ -143,4 +143,4 @@ MicWright is released under the [MIT License](LICENSE). Third-party components a
 
 ## Trademarks
 
-MicWright is an independent project, not affiliated with or endorsed by HyperX or HP Inc. HyperX and QuadCast are trademarks of HP Inc., used here only to say which microphone the app is made for. VB-CABLE is a product of VB-Audio Software.
+VB-CABLE is a product of VB-Audio Software. MicWright is an independent project, not affiliated with VB-Audio.

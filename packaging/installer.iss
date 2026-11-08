@@ -1,9 +1,9 @@
 ; Inno Setup script for MicWright. Built by build.ps1:
-;   ISCC.exe /DAppVersion=0.1.0 /DSourceDir=<published folder> packaging\installer.iss
+;   ISCC.exe /DAppVersion=1.0.0 /DSourceDir=<published folder> packaging\installer.iss
 ; Installs per user (no admin) into %LOCALAPPDATA%\Programs unless "all users" is chosen.
 
 #ifndef AppVersion
-  #define AppVersion "0.1.0"
+  #define AppVersion "1.0.0"
 #endif
 #ifndef SourceDir
   #define SourceDir "..\dist\MicWright-" + AppVersion + "-win-x64"

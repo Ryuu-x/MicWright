@@ -179,7 +179,7 @@ dependencies = [
 
 [[package]]
 name = "analyze"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -3073,7 +3073,7 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "hid-probe"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "hidapi",
@@ -4198,7 +4198,7 @@ checksum = "743fb55ba31b18fb1ecef6bdc9aa2743314978ac084044301a7eee33fb99a20d"
 
 [[package]]
 name = "mw-app"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "cpal",
@@ -4211,7 +4211,7 @@ dependencies = [
 
 [[package]]
 name = "mw-ctl"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -4222,7 +4222,7 @@ dependencies = [
 
 [[package]]
 name = "mw-device"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "winreg",
@@ -4230,7 +4230,7 @@ dependencies = [
 
 [[package]]
 name = "mw-dsp"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "deep_filter",
  "ndarray",
@@ -4248,7 +4248,7 @@ dependencies = [
 
 [[package]]
 name = "mw-dsp-ffi"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "mw-dsp",
  "mw-ipc",
@@ -4256,7 +4256,7 @@ dependencies = [
 
 [[package]]
 name = "mw-engine"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "cpal",
@@ -4271,7 +4271,7 @@ dependencies = [
 
 [[package]]
 name = "mw-ipc"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "mw-dsp",
  "windows 0.62.2",
@@ -7311,7 +7311,7 @@ dependencies = [
 
 [[package]]
 name = "third-party-notices"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "serde_json",
 ]

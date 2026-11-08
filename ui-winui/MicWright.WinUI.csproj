@@ -7,7 +7,7 @@
     <AssemblyName>MicWright</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
-    <Version>0.1.0</Version>
+    <Version>1.0.0</Version>
     <Product>MicWright</Product>
     <Description>Real-time voice enhancement for the HyperX QuadCast</Description>
     <Platforms>x64</Platforms>

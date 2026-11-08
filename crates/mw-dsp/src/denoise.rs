@@ -1,4 +1,4 @@
-//! AI noise suppression, wrapped for per-sample processing.
+//! Noise suppression, wrapped for per-sample processing.
 //!
 //! * **RNNoise** (pure-Rust `nnnoiseless`) always runs: it's very cheap and its
 //!   voice-activity probability drives the AGC and noise-floor tracker.

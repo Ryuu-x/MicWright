@@ -8,7 +8,7 @@
 //! ```
 //!
 //! The AGC sits *before* noise removal and the gate: a distant or low-gain mic
-//! delivers speech so quiet that the AI models treat it as noise and the gate closes
+//! delivers speech so quiet that the noise removers treat it as noise and the gate closes
 //! on it, so the level has to be brought up first.
 //!
 //! Everything is allocated in [`Chain::new`]; `process_*` never allocates or locks,

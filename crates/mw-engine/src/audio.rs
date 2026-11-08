@@ -21,7 +21,7 @@ use std::time::Duration;
 /// Target buffer fill per output (30 ms): enough headroom for WASAPI jitter.
 const TARGET_FILL: usize = 1_440;
 const RING: usize = 48_000; // 1 s
-/// Processing block (10 ms) — the AI models' native frame size.
+/// Processing block (10 ms) — the noise removers' native frame size.
 pub(crate) const BLOCK: usize = 480;
 /// Upper bound for the adaptive output buffer (150 ms).
 const MAX_TARGET: usize = 7_200;
@@ -190,7 +190,7 @@ impl Engine {
             if std::env::var_os("MW_DEBUG").is_some() {
                 eprintln!("dsp thread MMCSS boost: {}", if _mmcss.is_some() { "ok" } else { "FAILED" });
             }
-            // The chain (and its AI models) is built on this thread: they needn't be Send.
+            // The chain (and its noise removers) is built on this thread: they needn't be Send.
             let mut chain = Chain::new(SAMPLE_RATE);
             chain.set_params(&sh.params.lock().unwrap());
             let _ = ready_tx.send(chain.latency() as f32 / 48.0);

@@ -1,0 +1,19 @@
+[package]
+name = "mw-app"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "MicWright control app (test mode: mic -> chain -> headphones, no install needed)"
+
+[[bin]]
+name = "micwright"
+path = "src/main.rs"
+
+[dependencies]
+mw-dsp = { path = "../mw-dsp" }
+mw-engine = { path = "../mw-engine" }
+anyhow = "1"
+cpal = "0.18"
+gpui-kit = "0.8.1"
+rtrb = "0.4"
+hound = "3.5"

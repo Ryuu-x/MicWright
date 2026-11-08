@@ -1,0 +1,10 @@
+[package]
+name = "mw-device"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "QuadCast endpoint discovery and APO (FxProperties) registration"
+
+[dependencies]
+anyhow = "1"
+winreg = "0.56"

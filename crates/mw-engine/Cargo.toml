@@ -1,0 +1,24 @@
+[package]
+name = "mw-engine"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "MicWright app engine (audio I/O, presets, settings model, tips) with a C ABI for the WinUI 3 front-end"
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[dependencies]
+mw-dsp = { path = "../mw-dsp", features = ["deepfilter"] }
+anyhow = "1"
+cpal = "0.18"
+rtrb = "0.4"
+hound = "3.5"
+rubato = "0.14"
+# Pure Rust, so a malformed sound file can't corrupt memory. MPL-2.0: fine to link unmodified from MIT code.
+symphonia = { version = "0.6", default-features = false, features = ["aac", "flac", "isomp4", "mp3", "ogg", "pcm", "vorbis", "wav"] }
+serde_json = "1"
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.62", features = ["Win32_Foundation", "Win32_System_Threading"] }
+

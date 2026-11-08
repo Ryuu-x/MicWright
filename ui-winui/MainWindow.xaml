@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="MicWright.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:tk="using:CommunityToolkit.WinUI.Controls"
+    Title="MicWright">
+
+    <Grid x:Name="Root" PreviewKeyDown="Root_PreviewKeyDown" Loaded="Root_Loaded" Background="{StaticResource AppBackgroundBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Custom title bar: brand on the left, what the engine is doing on the right. -->
+        <Grid x:Name="AppTitleBar" Padding="16,0,150,0">
+            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <FontIcon Glyph="&#xE9D9;" FontSize="16" Foreground="{StaticResource AppAccentBrush}" />
+                <TextBlock Text="MICWRIGHT" Style="{StaticResource BrandTextStyle}" VerticalAlignment="Center" />
+            </StackPanel>
+            <Border x:Name="EnginePill" Style="{StaticResource PillStyle}" HorizontalAlignment="Right">
+                <TextBlock Style="{StaticResource PillTextStyle}" />
+            </Border>
+        </Grid>
+
+        <NavigationView x:Name="Nav" Grid.Row="1" PaneDisplayMode="Left" OpenPaneLength="176"
+                        IsSettingsVisible="False" IsBackButtonVisible="Collapsed" IsPaneToggleButtonVisible="False"
+                        IsTitleBarAutoPaddingEnabled="False" AlwaysShowHeader="False"
+                        SelectionChanged="Nav_SelectionChanged">
+            <NavigationView.Resources>
+                <SolidColorBrush x:Key="NavigationViewDefaultPaneBackground" Color="Transparent" />
+                <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="Transparent" />
+                <SolidColorBrush x:Key="NavigationViewContentBackground" Color="Transparent" />
+                <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="Transparent" />
+                <Thickness x:Key="NavigationViewContentGridBorderThickness">0</Thickness>
+                <CornerRadius x:Key="NavigationViewContentGridCornerRadius">0</CornerRadius>
+            </NavigationView.Resources>
+            <NavigationView.MenuItems>
+                <NavigationViewItem x:Name="DashboardItem" Content="Dashboard" Tag="Dashboard">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE80F;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="SoundItem" Content="Sound" Tag="Sound">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE9E9;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="PresetsItem" Content="Presets" Tag="Presets">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE734;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="SoundboardItem" Content="Soundboard" Tag="Soundboard">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE8D6;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="DevicesItem" Content="Devices" Tag="Devices">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE720;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="SettingsItem" Content="Settings" Tag="Settings">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE713;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+
+            <ScrollViewer x:Name="PageScroller" VerticalScrollBarVisibility="Auto">
+                <Grid x:Name="Pages" MaxWidth="760" Padding="20,4,28,28">
+
+                    <!-- ===== Dashboard: the path your voice takes, top to bottom ===== -->
+                    <StackPanel x:Name="DashboardPage" Tag="Dashboard" Spacing="10">
+                        <Grid>
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Audio Engine" Style="{StaticResource PageTitleStyle}" />
+                                <TextBlock x:Name="StatusText" Style="{StaticResource MutedTextStyle}" AutomationProperties.LiveSetting="Polite" />
+                            </StackPanel>
+                            <Button x:Name="StartStopButton" Content="Start" MinWidth="72" HorizontalAlignment="Right" VerticalAlignment="Center" Click="StartStop_Click" />
+                        </Grid>
+
+                        <Border Style="{StaticResource CardStyle}">
+                            <Grid ColumnSpacing="16" RowSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="INPUT DEVICE" Style="{StaticResource CardLabelStyle}" />
+                                    <TextBlock x:Name="InputName" Style="{StaticResource CardValueStyle}" />
+                                </StackPanel>
+                                <Grid x:Name="WaveBars" Grid.Row="1" Grid.ColumnSpan="2" Height="32"
+                                      AutomationProperties.AccessibilityView="Raw" />
+                                <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="12">
+                                    <Border x:Name="LevelPill" Style="{StaticResource PillStyle}">
+                                        <TextBlock Style="{StaticResource PillTextStyle}" />
+                                    </Border>
+                                    <TextBlock x:Name="RoomText" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <ToggleButton x:Name="MuteButton" Grid.Column="1" VerticalAlignment="Top" Click="MuteButton_Click" ToolTipService.ToolTip="Mute the output (M)">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <FontIcon x:Name="MuteIcon" Glyph="&#xE720;" FontSize="14" />
+                                        <TextBlock x:Name="MuteText" Text="Mute" />
+                                    </StackPanel>
+                                </ToggleButton>
+                            </Grid>
+                        </Border>
+
+                        <Grid ColumnSpacing="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Button x:Name="AbTile" Style="{StaticResource TileButtonStyle}" Click="AbTile_Click" ToolTipService.ToolTip="Compare raw and enhanced (Space)">
+                                <StackPanel Spacing="8">
+                                    <FontIcon Glyph="&#xE945;" FontSize="16" HorizontalAlignment="Left" />
+                                    <TextBlock Text="Enhancement" Style="{StaticResource TileTitleStyle}" />
+                                    <Border x:Name="AbPill" Style="{StaticResource PillStyle}">
+                                        <TextBlock Style="{StaticResource PillTextStyle}" />
+                                    </Border>
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="CleanTile" Grid.Column="1" Style="{StaticResource TileButtonStyle}" Click="CleanTile_Click" ToolTipService.ToolTip="Removes fans, PC hum and room noise">
+                                <StackPanel Spacing="8">
+                                    <FontIcon Glyph="&#xE9E9;" FontSize="16" HorizontalAlignment="Left" />
+                                    <TextBlock Text="Noise Removal" Style="{StaticResource TileTitleStyle}" />
+                                    <Border x:Name="CleanPill" Style="{StaticResource PillStyle}">
+                                        <TextBlock Style="{StaticResource PillTextStyle}" />
+                                    </Border>
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="EqTile" Grid.Column="2" Style="{StaticResource TileButtonStyle}" Click="EqTile_Click" ToolTipService.ToolTip="Bass, body and brightness">
+                                <StackPanel Spacing="8">
+                                    <FontIcon Glyph="&#xE9D2;" FontSize="16" HorizontalAlignment="Left" />
+                                    <TextBlock Text="Equalizer" Style="{StaticResource TileTitleStyle}" />
+                                    <Border x:Name="EqPill" Style="{StaticResource PillStyle}">
+                                        <TextBlock Style="{StaticResource PillTextStyle}" />
+                                    </Border>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+
+                        <Button x:Name="PresetTile" Style="{StaticResource TileButtonStyle}" Click="PresetTile_Click">
+                            <Grid>
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="PRESET" Style="{StaticResource CardLabelStyle}" />
+                                    <TextBlock x:Name="PresetName" Style="{StaticResource CardValueStyle}" />
+                                </StackPanel>
+                                <FontIcon Glyph="&#xE76C;" FontSize="12" HorizontalAlignment="Right" Foreground="{StaticResource AppMutedTextBrush}" />
+                            </Grid>
+                        </Button>
+
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="OUTPUT DEVICE" Style="{StaticResource CardLabelStyle}" />
+                                <TextBlock x:Name="OutputName" Style="{StaticResource CardValueStyle}" />
+                                <Border x:Name="OutputPill" Style="{StaticResource PillStyle}" Margin="0,2,0,0">
+                                    <TextBlock Style="{StaticResource PillTextStyle}" />
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Text="Space compares raw and enhanced  ·  M mutes" Style="{StaticResource MutedTextStyle}" FontSize="12" Margin="1,2,0,0" />
+                    </StackPanel>
+
+                    <!-- ===== Sound: generated from the engine's settings table ===== -->
+                    <StackPanel x:Name="SoundPage" Tag="Sound" Visibility="Collapsed">
+                        <Grid Margin="0,0,0,8">
+                            <TextBlock Text="Sound" Style="{StaticResource PageTitleStyle}" VerticalAlignment="Center" />
+                            <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
+                                <HyperlinkButton x:Name="ResetPageButton" Padding="8,2" ToolTipService.ToolTip="Back to the values from your current preset" Click="ResetPage_Click" />
+                                <CheckBox x:Name="ShowAllBox" Content="Advanced settings" MinWidth="0" CornerRadius="4" Click="ShowAll_Click" />
+                            </StackPanel>
+                        </Grid>
+                        <SelectorBar x:Name="PageBar" SelectionChanged="PageBar_SelectionChanged" Margin="-12,0,0,4" />
+                        <TextBlock x:Name="PageBlurb" Style="{StaticResource MutedTextStyle}" Margin="1,0,0,12" />
+                        <StackPanel x:Name="PagePanel" Spacing="{StaticResource SettingsCardSpacing}" />
+
+                        <TextBlock Text="COMPARE" Style="{StaticResource SectionHeaderStyle}" />
+                        <tk:SettingsCard x:Name="RecordCard" Header="Record an A/B sample"
+                                         Description="Records 15 seconds and saves a raw and an enhanced copy.">
+                            <tk:SettingsCard.HeaderIcon><FontIcon Glyph="&#xE7C8;" /></tk:SettingsCard.HeaderIcon>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <HyperlinkButton x:Name="OpenRecordingsButton" Content="Open folder" Visibility="Collapsed" Click="OpenRecordings_Click" />
+                                <Button x:Name="PlayRawButton" Content="Play raw" Visibility="Collapsed" Click="Play_Click" />
+                                <Button x:Name="PlayEnhancedButton" Content="Play enhanced" Visibility="Collapsed" Click="Play_Click" />
+                                <Button x:Name="RecordButton" Content="Record" MinWidth="96" Click="Record_Click" />
+                            </StackPanel>
+                        </tk:SettingsCard>
+                    </StackPanel>
+
+                    <!-- ===== Presets ===== -->
+                    <StackPanel x:Name="PresetsPage" Tag="Presets" Visibility="Collapsed" Spacing="8">
+                        <Grid>
+                            <TextBlock Text="Presets" Style="{StaticResource PageTitleStyle}" VerticalAlignment="Center" />
+                            <Button Content="Save current sound…" HorizontalAlignment="Right" Click="SavePreset_Click" />
+                        </Grid>
+                        <StackPanel x:Name="EditedRow" Orientation="Horizontal" Spacing="4" Visibility="Collapsed">
+                            <TextBlock x:Name="EditedText" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" Margin="1,0,4,0" />
+                            <HyperlinkButton x:Name="RevertLink" Content="Revert" Click="Revert_Click" />
+                        </StackPanel>
+                        <StackPanel x:Name="BuiltInPresets" Spacing="{StaticResource SettingsCardSpacing}" />
+                        <TextBlock Text="Far mic, Quiet room and Noisy room keep your Tone and Effects settings." Style="{StaticResource MutedTextStyle}" Margin="1,4,0,0" />
+                        <TextBlock Text="MY PRESETS" Style="{StaticResource SectionHeaderStyle}" Margin="1,12,0,0" />
+                        <TextBlock x:Name="NoPresetsText" Text="Nothing saved yet. Tune your sound, then choose Save current sound." Style="{StaticResource MutedTextStyle}" />
+                        <StackPanel x:Name="CustomPresets" Spacing="{StaticResource SettingsCardSpacing}" />
+                    </StackPanel>
+
+                    <!-- ===== Soundboard ===== -->
+                    <StackPanel x:Name="SoundboardPage" Tag="Soundboard" Visibility="Collapsed" Spacing="8">
+                        <Grid>
+                            <TextBlock Text="Soundboard" Style="{StaticResource PageTitleStyle}" VerticalAlignment="Center" />
+                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                <Button x:Name="StopAllButton" Content="Stop all" IsEnabled="False" Click="StopClips_Click" />
+                                <Button x:Name="AddSoundsButton" Content="Add sounds…" Style="{StaticResource AccentButtonStyle}" Click="AddSounds_Click" />
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock x:Name="BoardStatus" Style="{StaticResource MutedTextStyle}" Margin="1,0,0,0" AutomationProperties.LiveSetting="Polite" />
+                        <TextBlock x:Name="BoardProblem" Foreground="{ThemeResource SystemFillColorCriticalBrush}" FontSize="13" TextWrapping="Wrap" Margin="1,0,0,0" Visibility="Collapsed" AutomationProperties.LiveSetting="Assertive" />
+                        <TextBlock x:Name="NoClipsText" Style="{StaticResource MutedTextStyle}" Margin="1,8,0,0"
+                                   Text="No sounds yet. Add MP3, WAV, OGG, FLAC or M4A files up to a minute long. The app keeps its own copy, levelled so one sound isn't louder than the rest." />
+                        <StackPanel x:Name="Clips" Spacing="{StaticResource SettingsCardSpacing}" />
+
+                        <TextBlock Text="VOLUME" Style="{StaticResource SectionHeaderStyle}" Margin="1,12,0,0" />
+                        <tk:SettingsCard Header="Sound volume" Description="How loud other people hear your sounds.">
+                            <tk:SettingsCard.HeaderIcon><FontIcon Glyph="&#xE767;" /></tk:SettingsCard.HeaderIcon>
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <TextBlock x:Name="BoardVolumeText" MinWidth="44" TextAlignment="Right" VerticalAlignment="Center" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                <Slider x:Name="BoardVolumeSlider" Width="240" Minimum="0" Maximum="100" StepFrequency="1" IsThumbToolTipEnabled="False" VerticalAlignment="Center" AutomationProperties.Name="Sound volume" ValueChanged="BoardLevel_Changed" />
+                            </StackPanel>
+                        </tk:SettingsCard>
+                        <tk:SettingsCard Header="In my headphones" Description="How loud you hear them on the Monitor device. Separate from Hear yourself.">
+                            <tk:SettingsCard.HeaderIcon><FontIcon Glyph="&#xE7F6;" /></tk:SettingsCard.HeaderIcon>
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <TextBlock x:Name="BoardMonitorText" MinWidth="44" TextAlignment="Right" VerticalAlignment="Center" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                <Slider x:Name="BoardMonitorSlider" Width="240" Minimum="0" Maximum="100" StepFrequency="1" IsThumbToolTipEnabled="False" VerticalAlignment="Center" AutomationProperties.Name="Sound volume in my headphones" ValueChanged="BoardLevel_Changed" />
+                            </StackPanel>
+                        </tk:SettingsCard>
+
+                        <TextBlock Text="HOTKEYS" Style="{StaticResource SectionHeaderStyle}" Margin="1,12,0,0" />
+                        <tk:SettingsCard Header="Hotkeys" Description="Play sounds from any app, even with this window closed to the tray.">
+                            <tk:SettingsCard.HeaderIcon><FontIcon Glyph="&#xE92E;" /></tk:SettingsCard.HeaderIcon>
+                            <ToggleSwitch x:Name="BoardHotkeysSwitch" OnContent="On" OffContent="Off" MinWidth="0" AutomationProperties.Name="Hotkeys" Toggled="BoardHotkeys_Toggled" />
+                        </tk:SettingsCard>
+                        <tk:SettingsCard x:Name="StopCard" Header="Stop all sounds" Description="Click here, or use the hotkey, to cut off whatever is playing."
+                                         IsClickEnabled="True" IsActionIconVisible="False" Click="StopClips_Click">
+                            <tk:SettingsCard.HeaderIcon><FontIcon Glyph="&#xE711;" /></tk:SettingsCard.HeaderIcon>
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Border x:Name="PlayingPill" Style="{StaticResource PillStyle}">
+                                    <TextBlock Style="{StaticResource PillTextStyle}" />
+                                </Border>
+                                <Button x:Name="StopKeyButton" MinWidth="110" ToolTipService.ToolTip="Change the hotkey" Click="StopKey_Click" />
+                                <ToggleSwitch x:Name="StopKeySwitch" OnContent="On" OffContent="Off" MinWidth="0" AutomationProperties.Name="Stop all hotkey" Toggled="StopKey_Toggled" />
+                            </StackPanel>
+                        </tk:SettingsCard>
+                    </StackPanel>
+
+                    <!-- ===== Devices ===== -->
+                    <StackPanel x:Name="DevicesPage" Tag="Devices" Visibility="Collapsed" Spacing="{StaticResource SettingsCardSpacing}">
+                        <TextBlock Text="Devices" Style="{StaticResource PageTitleStyle}" />
+                        <tk:SettingsCard Header="Microphone" Description="The mic to enhance.">
+                            <tk:SettingsCard.HeaderIcon><FontIcon Glyph="&#xE720;" /></tk:SettingsCard.HeaderIcon>
+                            <ComboBox x:Name="InputBox" MinWidth="260" AutomationProperties.Name="Microphone" SelectionChanged="Device_SelectionChanged" />
+                        </tk:SettingsCard>
+                        <tk:SettingsCard x:Name="SendCard" Header="Send to" Description="Where other apps pick your voice up. Choose CABLE Input, then use CABLE Output as the mic in Discord or OBS.">
+                            <tk:SettingsCard.HeaderIcon><FontIcon Glyph="&#xE8F2;" /></tk:SettingsCard.HeaderIcon>
+                            <ComboBox x:Name="SendBox" MinWidth="260" AutomationProperties.Name="Send to" SelectionChanged="Device_SelectionChanged" />
+                        </tk:SettingsCard>
+                        <tk:SettingsCard Header="Monitor" Description="Hear yourself on headphones while you talk.">
+                            <tk:SettingsCard.HeaderIcon><FontIcon Glyph="&#xE7F6;" /></tk:SettingsCard.HeaderIcon>
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <ComboBox x:Name="MonitorBox" MinWidth="200" AutomationProperties.Name="Monitor device" SelectionChanged="Device_SelectionChanged" />
+                                <ToggleSwitch x:Name="HearMyself" OnContent="On" OffContent="Off" MinWidth="0" AutomationProperties.Name="Hear yourself" Toggled="HearMyself_Toggled" />
+                            </StackPanel>
+                        </tk:SettingsCard>
+                        <TextBlock x:Name="SendNote" Style="{StaticResource MutedTextStyle}" Margin="1,4,0,0" Visibility="Collapsed"
+                                   Text="Your voice reaches other apps through the virtual cable. To send it somewhere else, turn on Advanced settings on the Sound page." />
+                        <!-- Setup hint: only changes when the user changes devices or closes it, never on its own. -->
+                        <Border Style="{StaticResource CardBackingStyle}" Margin="0,4,0,0">
+                            <InfoBar x:Name="DiscordInfo" Severity="Informational" IsClosable="True" CornerRadius="12"
+                                     Title="Using this with Discord"
+                                     Message="Set Discord's Input Device to &quot;CABLE Output (VB-Audio Virtual Cable)&quot; and turn off Discord's own noise suppression, echo cancellation and automatic gain."
+                                     Closed="DiscordInfo_Closed" />
+                        </Border>
+                    </StackPanel>
+
+                    <!-- ===== Settings ===== -->
+                    <StackPanel x:Name="SettingsPage" Tag="Settings" Visibility="Collapsed" Spacing="{StaticResource SettingsCardSpacing}">
+                        <TextBlock Text="Settings" Style="{StaticResource PageTitleStyle}" />
+                        <tk:SettingsCard x:Name="DefaultMicCard" Header="Use as the Windows default mic">
+                            <tk:SettingsCard.HeaderIcon><FontIcon Glyph="&#xE774;" /></tk:SettingsCard.HeaderIcon>
+                            <ToggleSwitch x:Name="DefaultMicSwitch" OnContent="On" OffContent="Off" MinWidth="0" AutomationProperties.Name="Use as the Windows default mic" Toggled="DefaultMicSwitch_Toggled" />
+                        </tk:SettingsCard>
+                        <tk:SettingsCard Header="Start with Windows" Description="Starts hidden in the notification area when you sign in, so your enhanced mic is always ready.">
+                            <tk:SettingsCard.HeaderIcon><FontIcon Glyph="&#xE7E8;" /></tk:SettingsCard.HeaderIcon>
+                            <ToggleSwitch x:Name="StartupSwitch" OnContent="On" OffContent="Off" MinWidth="0" AutomationProperties.Name="Start with Windows" Toggled="StartupSwitch_Toggled" />
+                        </tk:SettingsCard>
+                        <tk:SettingsCard Header="Pop-up tips" Description="Hints in the corner about your mic level, clipping and room noise. Audio errors always show.">
+                            <tk:SettingsCard.HeaderIcon><FontIcon Glyph="&#xEA8F;" /></tk:SettingsCard.HeaderIcon>
+                            <ToggleSwitch x:Name="TipsSwitch" OnContent="On" OffContent="Off" MinWidth="0" AutomationProperties.Name="Pop-up tips" Toggled="TipsSwitch_Toggled" />
+                        </tk:SettingsCard>
+                        <tk:SettingsCard Header="Setup" Description="Walk through choosing your mic, checking your level and picking where your voice goes.">
+                            <tk:SettingsCard.HeaderIcon><FontIcon Glyph="&#xE82F;" /></tk:SettingsCard.HeaderIcon>
+                            <Button Content="Run setup again" Click="RunSetup_Click" />
+                        </tk:SettingsCard>
+                        <TextBlock Text="DETAILS" Style="{StaticResource SectionHeaderStyle}" Margin="1,12,0,0" />
+                        <Border Style="{StaticResource CardStyle}">
+                            <VariableSizedWrapGrid x:Name="StatsGrid" Orientation="Horizontal" ItemWidth="170" ItemHeight="24" />
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </ScrollViewer>
+        </NavigationView>
+
+        <!-- Live warnings float over the content (bottom-right) so they never push the layout around. -->
+        <StackPanel x:Name="TipsPanel" Grid.Row="1" Width="400" Margin="24" Spacing="8"
+                    HorizontalAlignment="Right" VerticalAlignment="Bottom">
+            <StackPanel.ChildrenTransitions>
+                <TransitionCollection>
+                    <EntranceThemeTransition FromVerticalOffset="24" />
+                    <RepositionThemeTransition />
+                </TransitionCollection>
+            </StackPanel.ChildrenTransitions>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -1,0 +1,13 @@
+[package]
+name = "mw-ctl"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+mw-dsp = { path = "../../crates/mw-dsp" }
+mw-ipc = { path = "../../crates/mw-ipc" }
+mw-device = { path = "../../crates/mw-device" }
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }

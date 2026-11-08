@@ -1,0 +1,10 @@
+[package]
+name = "hid-probe"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+hidapi = "2.6"
+anyhow = "1"

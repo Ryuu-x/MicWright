@@ -1,0 +1,13 @@
+[package]
+name = "mw-dsp-ffi"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "C ABI over the MicWright chain, linked into the APO"
+
+[lib]
+crate-type = ["staticlib", "rlib"]
+
+[dependencies]
+mw-dsp = { path = "../mw-dsp" }
+mw-ipc = { path = "../mw-ipc" }

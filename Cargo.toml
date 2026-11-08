@@ -1,0 +1,29 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/mw-dsp",
+    "crates/mw-dsp-ffi",
+    "crates/mw-ipc",
+    "crates/mw-device",
+    "crates/mw-engine",
+    "crates/mw-app",
+    "tools/mw-ctl",
+    "tools/hid-probe",
+    "tools/analyze",
+    "tools/third-party-notices",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+debug = 1
+
+# The APO runs inside audiodg.exe: never unwind across the C ABI.
+[profile.release.package.mw-dsp-ffi]
+opt-level = 3

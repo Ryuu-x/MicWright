@@ -1,0 +1,9 @@
+/target
+/apo/build
+*.wav
+!presets/*.wav
+/recordings
+
+/ui-winui/bin
+/ui-winui/obj
+/dist

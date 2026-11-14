@@ -1,0 +1,5 @@
+# Run inside Linux containers: keep LF even on Windows checkouts.
+*.sh text eol=lf
+packaging/linux/test-desktop/insession text eol=lf
+packaging/linux/test-desktop/50-micwright text eol=lf
+packaging/linux/test-desktop/tests/*.sh text eol=lf

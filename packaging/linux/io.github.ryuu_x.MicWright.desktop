@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=MicWright
+GenericName=Voice enhancer
+Comment=Cleans up your microphone for Discord, OBS and games
+Exec=micwright
+Icon=audio-input-microphone
+Terminal=false
+Categories=AudioVideo;Audio;
+Keywords=microphone;noise;voice;soundboard;
+StartupWMClass=io.github.ryuu_x.MicWright

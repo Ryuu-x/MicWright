@@ -695,7 +695,7 @@ mod tests {
 
     #[test]
     fn names_and_ids_cannot_escape_the_folder() {
-        assert_eq!(clean_name(Path::new(r"C:\clips\FAKKKK (1).mp3")), "FAKKKK (1)");
+        assert_eq!(clean_name(&Path::new("clips").join("FAKKKK (1).mp3")), "FAKKKK (1)");
         assert_eq!(clean_name(Path::new("a\u{7}b.wav")), "ab");
         assert_eq!(clean_name(Path::new(".wav")), ".wav");
         assert!(clean_name(Path::new(&format!("{}.mp3", "x".repeat(300)))).chars().count() <= MAX_NAME_CHARS);

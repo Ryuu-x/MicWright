@@ -539,7 +539,11 @@ impl Controller {
                 key: "quiet",
                 severity: Severity::Warning,
                 title: "Your voice is very quiet at the mic",
-                message: "Speak into the side with the HyperX logo (not the top), turn the gain knob up, and set the Windows mic level to 100.",
+                message: if cfg!(target_os = "linux") {
+                    "Speak into the side with the HyperX logo (not the top), turn the gain knob up, and set the mic's input volume to 100% in your sound settings."
+                } else {
+                    "Speak into the side with the HyperX logo (not the top), turn the gain knob up, and set the Windows mic level to 100."
+                },
             });
         }
         if self.in_peak_hold > -1.0 {
@@ -608,11 +612,17 @@ impl Controller {
     }
 }
 
-/// `%APPDATA%\MicWright` (`MW_CONFIG_DIR` overrides it, e.g. for tests).
+/// `%APPDATA%\MicWright`, or `~/.config/MicWright` on Linux (`MW_CONFIG_DIR` overrides
+/// it, e.g. for tests).
 pub fn config_dir() -> PathBuf {
     if let Some(dir) = std::env::var_os("MW_CONFIG_DIR") {
         return PathBuf::from(dir);
     }
+    platform_config_dir()
+}
+
+#[cfg(not(target_os = "linux"))]
+fn platform_config_dir() -> PathBuf {
     let base = std::env::var_os("APPDATA").map(PathBuf::from).unwrap_or_else(std::env::temp_dir);
     let dir = base.join("MicWright");
     // The app used to be called QuadCast Enhancer: carry its settings over once.
@@ -621,6 +631,34 @@ pub fn config_dir() -> PathBuf {
         let _ = std::fs::rename(&legacy, &dir);
     }
     dir
+}
+
+#[cfg(target_os = "linux")]
+fn platform_config_dir() -> PathBuf {
+    xdg_dir("XDG_CONFIG_HOME", ".config").join("MicWright")
+}
+
+#[cfg(target_os = "linux")]
+fn home() -> PathBuf {
+    std::env::var_os("HOME").map(PathBuf::from).unwrap_or_else(std::env::temp_dir)
+}
+
+/// An XDG base directory: `$var` when it holds an absolute path, else `~/fallback`.
+#[cfg(target_os = "linux")]
+fn xdg_dir(var: &str, fallback: &str) -> PathBuf {
+    std::env::var_os(var).map(PathBuf::from).filter(|p| p.is_absolute()).unwrap_or_else(|| home().join(fallback))
+}
+
+/// The desktop's Music folder from `user-dirs.dirs` (it may be translated, e.g. `~/Musik`).
+#[cfg(target_os = "linux")]
+fn music_dir() -> PathBuf {
+    let dirs = std::fs::read_to_string(xdg_dir("XDG_CONFIG_HOME", ".config").join("user-dirs.dirs")).unwrap_or_default();
+    dirs.lines()
+        .find_map(|line| line.trim().strip_prefix("XDG_MUSIC_DIR="))
+        .map(|v| v.trim_matches('"').replace("$HOME", &home().to_string_lossy()))
+        .map(PathBuf::from)
+        .filter(|p| p.is_absolute() && *p != home())
+        .unwrap_or_else(|| home().join("Music"))
 }
 
 pub fn presets_dir() -> PathBuf {
@@ -661,9 +699,15 @@ fn params_from_json(text: &str, p: &mut Params) -> Result<(), String> {
     Ok(())
 }
 
+#[cfg(not(target_os = "linux"))]
 pub fn recordings_dir() -> PathBuf {
     let base = std::env::var_os("USERPROFILE").map(PathBuf::from).unwrap_or_default();
     base.join("Music").join("MicWright")
+}
+
+#[cfg(target_os = "linux")]
+pub fn recordings_dir() -> PathBuf {
+    music_dir().join("MicWright")
 }
 
 #[cfg(test)]

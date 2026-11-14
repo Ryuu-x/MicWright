@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=MicWright
+Comment=Enhances your microphone
+Exec=micwright
+Icon=audio-input-microphone
+Terminal=false
+Categories=AudioVideo;Audio;
+StartupWMClass=io.github.ryuu_x.MicWright

@@ -1,0 +1,13 @@
+#!/bin/bash
+# Container start: install the latest build from the shared target volume, and put a
+# launcher on the desktop.
+mkdir -p /opt/micwright
+if [ -x /target/release/micwright ]; then
+    cp /target/release/micwright /opt/micwright/micwright
+    strip /opt/micwright/micwright 2>/dev/null || true
+fi
+ln -sf /opt/micwright/micwright /usr/local/bin/micwright
+mkdir -p /config/Desktop
+cp /usr/share/applications/io.github.ryuu_x.MicWright.desktop /config/Desktop/MicWright.desktop
+chmod +x /config/Desktop/MicWright.desktop
+chown -R abc:abc /config/Desktop

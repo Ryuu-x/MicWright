@@ -81,12 +81,80 @@ pub fn device_name(d: &cpal::Device) -> String {
     d.description().map(|d| d.name().to_string()).unwrap_or_else(|_| "<unknown>".into())
 }
 
+/// What a sound-server connection is for.
+#[derive(Clone, Copy)]
+pub enum HostRole {
+    /// Listing devices, and the mic.
+    Main,
+    Send,
+    Monitor,
+    /// Playing A/B recordings back.
+    Player,
+}
+
+/// The connection for `role`. On Linux each role keeps one for the life of the app:
+/// cpal's PulseAudio backend never closes a connection it opened (each leaks a socket and
+/// a thread, and the server stops accepting clients at 64), and it can't run two playback
+/// streams on one connection. Elsewhere a host is cheap, so every call makes a new one.
+pub fn host(role: HostRole) -> Arc<cpal::Host> {
+    #[cfg(target_os = "linux")]
+    {
+        let mut hosts = HOSTS.lock().unwrap();
+        hosts[role as usize].get_or_insert_with(|| Arc::new(cpal::default_host())).clone()
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        let _ = role;
+        Arc::new(cpal::default_host())
+    }
+}
+
+#[cfg(target_os = "linux")]
+static HOSTS: Mutex<[Option<Arc<cpal::Host>>; 4]> = Mutex::new([None, None, None, None]);
+
+/// Drops the kept connections, so the next use reconnects (e.g. after the sound server
+/// restarted). Each dropped one leaks as described in [`host`]; this is rare.
+pub fn reset_hosts() {
+    #[cfg(target_os = "linux")]
+    {
+        *HOSTS.lock().unwrap() = [None, None, None, None];
+    }
+}
+
+fn names(list: Result<impl Iterator<Item = cpal::Device>, cpal::Error>) -> Vec<String> {
+    match list {
+        Ok(devices) => devices.map(|d| device_name(&d)).collect(),
+        Err(_) => {
+            reset_hosts();
+            Vec::new()
+        }
+    }
+}
+
+/// Mics to offer. On Linux the sound server also lists our own virtual mic, which would
+/// feed back, and "Monitor of …" sources, which go last: they record speakers.
 pub fn input_names() -> Vec<String> {
-    cpal::default_host().input_devices().map(|it| it.map(|d| device_name(&d)).collect()).unwrap_or_default()
+    let names = names(host(HostRole::Main).input_devices());
+    #[cfg(target_os = "linux")]
+    let names = {
+        let (own, monitors) = crate::linux::special_inputs();
+        let mut names: Vec<String> = names.into_iter().filter(|n| !own.contains(n)).collect();
+        names.sort_by_key(|n| monitors.contains(n));
+        names
+    };
+    names
+}
+
+/// Sources that record a speaker rather than a mic (Linux only).
+fn monitor_sources() -> Vec<String> {
+    #[cfg(target_os = "linux")]
+    return crate::linux::special_inputs().1;
+    #[cfg(not(target_os = "linux"))]
+    return Vec::new();
 }
 
 pub fn output_names() -> Vec<String> {
-    cpal::default_host().output_devices().map(|it| it.map(|d| device_name(&d)).collect()).unwrap_or_default()
+    names(host(HostRole::Main).output_devices())
 }
 
 pub fn is_virtual_cable(name: &str) -> bool {
@@ -94,25 +162,45 @@ pub fn is_virtual_cable(name: &str) -> bool {
     n.contains("cable") || n.contains("voicemeeter") || n.contains("virtual")
 }
 
+/// The output that carries the voice to other apps, by platform: VB-CABLE on Windows,
+/// MicWright's own virtual mic on Linux.
+pub fn is_send_device(name: &str) -> bool {
+    #[cfg(target_os = "linux")]
+    return name == crate::linux::SINK_DESC;
+    #[cfg(not(target_os = "linux"))]
+    return is_virtual_cable(name);
+}
+
 /// Picks the QuadCast mic; sends to a virtual cable if one exists, and monitors on
 /// the QuadCast's own headphone jack (or the default output).
 pub fn default_devices() -> (Option<String>, Option<String>, Option<String>) {
-    let host = cpal::default_host();
+    let host = host(HostRole::Main);
     let outputs = output_names();
     let quadcast_out = outputs.iter().find(|n| n.to_lowercase().contains("quadcast")).cloned();
-    let default_out = host.default_output_device().map(|d| device_name(&d));
+    // Never monitor on the output that feeds other apps: you'd hear nothing.
+    let default_out = host
+        .default_output_device()
+        .map(|d| device_name(&d))
+        .filter(|n| !is_send_device(n))
+        .or_else(|| outputs.iter().find(|n| !is_send_device(n)).cloned());
     let inputs = input_names();
+    let monitors = monitor_sources();
+    let is_monitor = |n: &String| monitors.contains(n);
     // Never fall back to a virtual cable: once it is the Windows default mic (the
     // "every app" mode), capturing it would feed our own output back in.
+    let default_in = host.default_input_device().map(|d| device_name(&d)).filter(|n| !is_virtual_cable(n));
     let input = inputs
         .iter()
         .find(|n| n.to_lowercase().contains("quadcast"))
         .cloned()
-        .or_else(|| host.default_input_device().map(|d| device_name(&d)).filter(|n| !is_virtual_cable(n)))
+        .or_else(|| default_in.clone().filter(|n| !is_monitor(n)))
+        .or_else(|| inputs.iter().find(|n| !is_virtual_cable(n) && !is_monitor(n)).cloned())
+        .or(default_in)
+        // Setups whose only mic is a monitor source: better than none, and the user can change it.
         .or_else(|| inputs.iter().find(|n| !is_virtual_cable(n)).cloned());
     let send = outputs
         .iter()
-        .find(|n| n.to_lowercase().starts_with("cable input"))
+        .find(|n| is_send_device(n) || n.to_lowercase().starts_with("cable input"))
         .or_else(|| outputs.iter().find(|n| is_virtual_cable(n)))
         .cloned();
     let monitor = quadcast_out.or(default_out);
@@ -142,19 +230,20 @@ impl Engine {
     /// `send` always receives the processed voice; `monitor` (if any) gets it only while
     /// `Shared::monitor` is on.
     pub fn start(input: &str, send: &str, monitor: Option<&str>, shared: Arc<Shared>) -> Result<Self> {
-        let host = cpal::default_host();
-        let in_dev = host
-            .input_devices()?
-            .find(|d| device_name(d) == input)
-            .with_context(|| format!("input device '{input}' not found"))?;
+        let main = host(HostRole::Main);
+        let in_dev = main.input_devices().inspect_err(|_| reset_hosts())?.find(|d| device_name(d) == input);
+        let in_dev = in_dev.with_context(|| format!("input device '{input}' not found"))?;
 
         let in_def = in_dev.default_input_config()?;
-        if in_def.sample_rate() != SAMPLE_RATE {
+        // The Linux sound server converts rate and format for us.
+        if in_def.sample_rate() != SAMPLE_RATE && !cfg!(target_os = "linux") {
             bail!("input runs at {} Hz; set the mic to 48000 Hz in the Windows sound settings", in_def.sample_rate());
         }
         let in_ch = in_def.channels() as usize;
         let mut in_cfg = in_def.config();
         in_cfg.sample_rate = SAMPLE_RATE;
+        in_cfg.buffer_size = stream_buffer();
+        let in_format = if cfg!(target_os = "linux") { cpal::SampleFormat::F32 } else { in_def.sample_format() };
 
         // Each start is a fresh session for the dropout counter and buffer size.
         shared.underruns.store(0, Ordering::Relaxed);
@@ -168,7 +257,9 @@ impl Engine {
         let monitor = monitor.filter(|m| *m != send);
         for (name, is_monitor) in std::iter::once((send, false)).chain(monitor.map(|m| (m, true))) {
             let (producer, consumer) = rtrb::RingBuffer::<f32>::new(RING);
-            let (stream, ch) = build_output(&host, name, consumer, is_monitor, shared.clone())?;
+            // One playback stream per connection (see `host`).
+            let out_host = host(if is_monitor { HostRole::Monitor } else { HostRole::Send });
+            let (stream, ch) = build_output(&out_host, name, consumer, is_monitor, shared.clone())?;
             producers.push((producer, is_monitor));
             outputs.push(stream);
             descs.push(format!("{}{name} · {ch} ch", if is_monitor { "monitor: " } else { "" }));
@@ -300,25 +391,26 @@ impl Engine {
             dsp_thread.unpark();
         };
         let err_in = |e| eprintln!("input stream error: {e}");
-        let input_stream = match in_def.sample_format() {
+        let input_stream = match in_format {
             cpal::SampleFormat::F32 => in_dev.build_input_stream(
                 in_cfg,
                 move |d: &[f32], _: &_| on_input(&mut d.iter().copied()),
                 err_in,
                 None,
-            )?,
+            ),
             cpal::SampleFormat::I16 => in_dev.build_input_stream(
                 in_cfg,
                 move |d: &[i16], _: &_| on_input(&mut d.iter().map(|&s| s as f32 / 32768.0)),
                 err_in,
                 None,
-            )?,
+            ),
             f => bail!("unsupported input sample format {f:?}"),
-        };
+        }
+        .with_context(|| format!("can't open the mic '{input}'"))?;
 
-        input_stream.play()?;
+        input_stream.play().with_context(|| format!("can't start the mic '{input}'"))?;
         for o in &outputs {
-            o.play()?;
+            o.play().context("can't start an output")?;
         }
         Ok(Self {
             _input: input_stream,
@@ -328,7 +420,7 @@ impl Engine {
             board,
             has_monitor,
             chain_latency_ms,
-            input_desc: format!("{input} · {in_ch} ch · {:?}", in_def.sample_format()),
+            input_desc: format!("{input} · {in_ch} ch · {in_format:?}"),
             output_desc: descs.join(" + "),
         })
     }
@@ -368,6 +460,16 @@ fn boost_thread() -> Option<()> {
     None
 }
 
+/// The Linux sound server's default buffer is up to 2 s, far too much for a live voice;
+/// ask for one 10 ms block. WASAPI's default is already short.
+fn stream_buffer() -> cpal::BufferSize {
+    if cfg!(target_os = "linux") {
+        cpal::BufferSize::Fixed(BLOCK as u32)
+    } else {
+        cpal::BufferSize::Default
+    }
+}
+
 fn build_output(
     host: &cpal::Host,
     name: &str,
@@ -382,8 +484,9 @@ fn build_output(
     let def = dev.default_output_config()?;
     let ch = def.channels() as usize;
     let mut cfg = def.config();
-    // WASAPI shared mode converts rates for us.
+    // WASAPI shared mode and the Linux sound server convert rates for us.
     cfg.sample_rate = SAMPLE_RATE;
+    cfg.buffer_size = stream_buffer();
     let mut drain = DriftDrain::new(consumer);
     let stream = dev.build_output_stream(
         cfg,
@@ -397,7 +500,8 @@ fn build_output(
         },
         |e| eprintln!("output stream error: {e}"),
         None,
-    )?;
+    )
+    .with_context(|| format!("can't open the output '{name}'"))?;
     Ok((stream, ch))
 }
 

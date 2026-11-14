@@ -1,0 +1,15 @@
+#!/bin/bash
+# Runs a command inside the desktop user's Plasma session (sound, D-Bus, Wayland).
+#   docker exec -u abc micwright-desktop insession micwright --selftest
+pid=$(pgrep -u abc -x plasmashell | head -1)
+if [ -z "$pid" ]; then
+    echo "the desktop session isn't up yet" >&2
+    exit 1
+fi
+while IFS= read -r -d '' var; do
+    case "$var" in
+        DBUS_SESSION_BUS_ADDRESS=*|WAYLAND_DISPLAY=*|DISPLAY=*|XDG_*|PULSE_*|HOME=*|QT_QPA_PLATFORM=*) export "$var" ;;
+    esac
+done < "/proc/$pid/environ"
+export PATH="/opt/micwright:$PATH"
+exec "$@"

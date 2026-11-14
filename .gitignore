@@ -7,3 +7,7 @@
 /ui-winui/bin
 /ui-winui/obj
 /dist
+
+# Markdown stays local, except the README GitHub shows.
+*.md
+!README.md
